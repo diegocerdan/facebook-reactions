@@ -1,0 +1,4 @@
+#!/bin/python
+
+page_token = 'YOUR_ACCESS_TOKEN'
+page_id = 'YOUR_PAGE_ID'
