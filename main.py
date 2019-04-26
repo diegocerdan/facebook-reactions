@@ -1,32 +1,39 @@
 import config
 import facebook
 import json
+import sys
 
 graph = facebook.GraphAPI(access_token=config.page_token, version="3.0")
 
-latest_posts = graph.get_object(id=config.page_id, fields='posts.fields(type, name, created_time, object_id)')
-latest_posts = latest_posts['posts']['data']
 
-def get_all_reactions(id):
+def get_all(id, type, max = sys.maxsize):
     args = {}
+    count = 0
+
     while True:
-        objects = graph.request("{0}/{1}/reactions".format(graph.version, id), args)
+        objects = graph.request("{0}/{1}/{2}".format(graph.version, id, type), args)
 
         for object in objects['data']:
             yield object
+            count += 1
+            if count == max:
+                return
+
 
         next = objects.get('paging', {}).get('next')
 
-        if not next:
+        if not next or type == 'posts':
             return
 
         args['after'] = objects['paging']['cursors']['after']
 
 
+latest_posts = get_all(config.page_id, 'posts', 2)
+
 post_reactions = {}
 
 for post in latest_posts:
-    reactions = get_all_reactions(post['id'])
+    reactions = get_all(post['id'], 'reactions')
 
     post_reactions[post['id']] = list(reactions)
 
